@@ -1,0 +1,388 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: scholarships
+    description: Scholarship discovery and details
+  - name: profile
+    description: Student profile and recommendation operations
+  - name: saved
+    description: Saved scholarships
+  - name: applications
+    description: Application tracking
+  - name: notifications
+    description: In-app notifications
+  - name: dashboard
+    description: Dashboard summaries
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /scholarships:
+    get:
+      operationId: listScholarships
+      tags: [scholarships]
+      summary: List scholarships
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: educationLevel
+          in: query
+          schema: { type: string }
+        - name: field
+          in: query
+          schema: { type: string }
+        - name: type
+          in: query
+          schema: { type: string }
+        - name: sort
+          in: query
+          schema: { type: string }
+        - name: featured
+          in: query
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Scholarship list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Scholarship" }
+  /scholarships/{id}:
+    get:
+      operationId: getScholarship
+      tags: [scholarships]
+      summary: Get scholarship details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Scholarship details
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Scholarship" }
+        "404":
+          description: Scholarship not found
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Get current student profile
+      responses:
+        "200":
+          description: Student profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+    put:
+      operationId: updateProfile
+      tags: [profile]
+      summary: Update current student profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UserProfileInput" }
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+  /recommendations:
+    get:
+      operationId: getRecommendations
+      tags: [profile]
+      summary: Get scholarships matched to the current profile
+      responses:
+        "200":
+          description: Matched scholarships
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Recommendation" }
+  /saved:
+    get:
+      operationId: listSavedScholarships
+      tags: [saved]
+      summary: List saved scholarships
+      responses:
+        "200":
+          description: Saved scholarships
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Scholarship" }
+  /saved/{scholarshipId}:
+    post:
+      operationId: saveScholarship
+      tags: [saved]
+      summary: Save a scholarship
+      parameters:
+        - name: scholarshipId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Saved scholarship
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Scholarship" }
+    delete:
+      operationId: unsaveScholarship
+      tags: [saved]
+      summary: Remove a saved scholarship
+      parameters:
+        - name: scholarshipId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Scholarship removed
+  /applications:
+    get:
+      operationId: listApplications
+      tags: [applications]
+      summary: List tracked applications
+      responses:
+        "200":
+          description: Tracked applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Application" }
+    post:
+      operationId: createApplication
+      tags: [applications]
+      summary: Add scholarship to application tracker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ApplicationInput" }
+      responses:
+        "201":
+          description: Tracked application
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Application" }
+  /applications/{id}:
+    put:
+      operationId: updateApplication
+      tags: [applications]
+      summary: Update application status and notes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ApplicationUpdate" }
+      responses:
+        "200":
+          description: Updated application
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Application" }
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List in-app notifications
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Notification" }
+  /notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Updated notification
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Notification" }
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Dashboard" }
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Scholarship:
+      type: object
+      required: [id, title, provider, description, amount, deadline, educationLevel, field, type, location, featured, matchScore, status]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        provider: { type: string }
+        description: { type: string }
+        amount: { type: string }
+        currency: { type: string }
+        deadline: { type: string }
+        educationLevel: { type: string }
+        field: { type: string }
+        type: { type: string }
+        location: { type: string }
+        applicationUrl: { type: string }
+        benefits:
+          type: array
+          items: { type: string }
+        requiredDocuments:
+          type: array
+          items: { type: string }
+        eligibilityCriteria:
+          type: array
+          items: { type: string }
+        minimumPercentage: { type: number }
+        maximumFamilyIncome: { type: number }
+        featured: { type: boolean }
+        matchScore: { type: integer }
+        status: { type: string }
+    UserProfile:
+      type: object
+      required: [name, email, educationLevel, field, state, category, completion]
+      properties:
+        name: { type: string }
+        email: { type: string }
+        educationLevel: { type: string }
+        field: { type: string }
+        state: { type: string }
+        category: { type: string }
+        familyIncome: { type: number }
+        percentage: { type: number }
+        gender: { type: string }
+        institution: { type: string }
+        completion: { type: integer }
+        missing:
+          type: array
+          items: { type: string }
+    UserProfileInput:
+      type: object
+      properties:
+        name: { type: string }
+        educationLevel: { type: string }
+        field: { type: string }
+        state: { type: string }
+        category: { type: string }
+        familyIncome: { type: number }
+        percentage: { type: number }
+        gender: { type: string }
+        institution: { type: string }
+    Recommendation:
+      allOf:
+        - $ref: "#/components/schemas/Scholarship"
+        - type: object
+          required: [reasons, missingRequirements]
+          properties:
+            reasons:
+              type: array
+              items: { type: string }
+            missingRequirements:
+              type: array
+              items: { type: string }
+    Application:
+      type: object
+      required: [id, scholarshipId, scholarshipTitle, provider, status, deadline, notes]
+      properties:
+        id: { type: integer }
+        scholarshipId: { type: integer }
+        scholarshipTitle: { type: string }
+        provider: { type: string }
+        status: { type: string }
+        appliedDate: { type: ["string", "null"] }
+        deadline: { type: string }
+        notes: { type: string }
+    ApplicationInput:
+      type: object
+      required: [scholarshipId, status]
+      properties:
+        scholarshipId: { type: integer }
+        status: { type: string }
+        notes: { type: string }
+    ApplicationUpdate:
+      type: object
+      properties:
+        status: { type: string }
+        notes: { type: string }
+    Notification:
+      type: object
+      required: [id, title, message, type, read, createdAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        message: { type: string }
+        type: { type: string }
+        read: { type: boolean }
+        createdAt: { type: string }
+    Dashboard:
+      type: object
+      required: [recommendedCount, savedCount, appliedCount, upcomingDeadlines, profile, topMatches, applications]
+      properties:
+        recommendedCount: { type: integer }
+        savedCount: { type: integer }
+        appliedCount: { type: integer }
+        upcomingDeadlines: { type: integer }
+        profile: { $ref: "#/components/schemas/UserProfile" }
+        topMatches:
+          type: array
+          items: { $ref: "#/components/schemas/Recommendation" }
+        applications:
+          type: array
+          items: { $ref: "#/components/schemas/Application" }
+
