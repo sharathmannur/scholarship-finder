@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Scholarship Finder"
+description = "A responsive scholarship discovery app that helps students find, understand, save, and track opportunities matched to their profile."
+version = "1.0.0"
+id = "artifacts/scholarship-finder"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24801
+
+[services.development]
+run = "pnpm --filter @workspace/scholarship-finder run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/scholarship-finder", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/scholarship-finder/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24801"
+BASE_PATH = "/"
